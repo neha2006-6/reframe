@@ -1,165 +1,43 @@
+<div align="center">
+
 # Reframe
 
+### Free, open-source video editor that runs entirely in your browser.
+### No login. No uploads. No ads. 100% private.
+
+[![GitHub Stars](https://img.shields.io/github/stars/magic-peach/reframe?style=flat-square&logo=github&color=FF6B35)](https://github.com/magic-peach/reframe/stargazers)
+[![GitHub Forks](https://img.shields.io/github/forks/magic-peach/reframe?style=flat-square&logo=github)](https://github.com/magic-peach/reframe/network/members)
+[![GitHub Issues](https://img.shields.io/github/issues/magic-peach/reframe?style=flat-square)](https://github.com/magic-peach/reframe/issues)
 [![Next.js](https://img.shields.io/badge/Next.js-15-black?style=flat-square&logo=next.js)](https://nextjs.org)
-[![FFmpeg.wasm](https://img.shields.io/badge/FFmpeg.wasm-0.12.10-green?style=flat-square)](https://ffmpegwasm.netlify.app)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5-blue?style=flat-square&logo=typescript)](https://www.typescriptlang.org)
+[![FFmpeg.wasm](https://img.shields.io/badge/FFmpeg.wasm-0.12.10-green?style=flat-square)](https://ffmpegwasm.netlify.app)
 [![License](https://img.shields.io/badge/License-MIT-green?style=flat-square)](LICENSE)
+[![GSSoC 2026](https://img.shields.io/badge/GSSoC-2026-FF6B35?style=flat-square)](https://gssoc.girlscript.tech)
 
-A free, open-source video editor that runs entirely in your browser. No login, no uploads, no ads. Edit videos locally with ease.
+**[Try it now →](https://github.com/magic-peach/reframe)** · **[Report a Bug](https://github.com/magic-peach/reframe/issues/new?labels=bug)** · **[Request a Feature](https://github.com/magic-peach/reframe/issues/new?labels=feature)**
 
-## Motivation
+</div>
 
-I've always enjoyed editing videos. But the existing tools felt bloated, slow, or required accounts and uploads. I wanted something simple, fast, and private. So I built Reframe for myself and my mum, who wanted an easy way to resize videos without understanding file formats or ffmpeg commands. This is a simple tool that helps me do that.
+---
+
+## What is Reframe?
+
+Reframe is a **browser-based video editor** — everything happens on your device. Your videos are never sent to any server. No account needed. No fees. Just open and edit.
+
+> Built for everyone — whether you're a creator resizing videos for social media, or just someone who wants to quickly trim and convert without installing bulky software.
 
 ## Features
 
-- **Instant Resizing** — Choose from 11 preset formats (Reels, TikTok, YouTube, Instagram Feed, Panoramic, etc.) or set custom dimensions
+- **Instant Resizing** — 11 preset formats (Reels, TikTok, YouTube, Instagram, etc.) + custom dimensions
 - **Flexible Framing** — Fit (letterbox) or Fill (crop) to your target aspect ratio
 - **Precise Trimming** — Cut start and end times with real-time duration validation
-- **Rotation** — 0°, 90°, 180°, 270° rotation
-- **Audio Control** — Keep or mute audio separately
-- **Speed Control** — 0.25x to 4x playback speed
+- **Rotation** — 0°, 90°, 180°, 270° rotation support
+- **Audio Control** — Keep or mute audio independently
+- **Speed Control** — 0.25x to 4x playback speed with smooth audio adjustment
 - **Quality Settings** — CRF slider for quality vs. file size trade-offs
-- **Smooth UX** — Lottie animations, live progress during export, instant download
+- **Smooth UX** — Lottie animations, live export progress, instant download
 
 Everything stays on your device. No servers. No tracking. No login.
-
----
-
-## Technical Architecture
-
-### System Design
-
-Reframe is a **static single-page application (SPA)** built with Next.js and deployed to any CDN (Vercel, Cloudflare, etc.). It uses ffmpeg.wasm to perform all video processing client-side.
-
-```mermaid
-graph TD
-    A["UI Layer<br/>Next.js Components"] --> B["VideoEditor<br/>FileUpload | PresetSelector<br/>FramingControl | TrimControl"]
-    A --> C["AudioSpeedControl<br/>RotateControl | ExportSettings"]
-
-    B --> D["useVideoEditor Hook<br/>State Management"]
-    C --> D
-
-    D --> E["ffmpeg.ts Module<br/>Lazy-loads & wraps FFmpeg API"]
-
-    E --> F["FFmpeg.wasm<br/>Single-threaded core via CDN<br/>~30MB"]
-
-    F --> G["Video Processing Pipeline"]
-
-    G --> H1["Video: trim → rotate<br/>→ scale/crop → speed"]
-    G --> H2["Audio: trim → speed"]
-
-    H1 --> I["Output<br/>MP4 or WebM"]
-    H2 --> I
-
-    style A fill:#f0f4f8
-    style D fill:#e8f5e9
-    style E fill:#fff3e0
-    style F fill:#fce4ec
-    style G fill:#f3e5f5
-```
-
-### Key Files
-
-| File                             | Purpose                                                              |
-| -------------------------------- | -------------------------------------------------------------------- |
-| `src/components/VideoEditor.tsx` | Root component; layout, state orchestration                          |
-| `src/hooks/useVideoEditor.ts`    | State management (file, recipe, export status)                       |
-| `src/lib/ffmpeg.ts`              | FFmpeg wrapper; lazy-loads WASM, builds filter chains, exports video |
-| `src/lib/presets.ts`             | 11 preset definitions (9:16, 16:9, 4:5, etc.)                        |
-| `src/lib/types.ts`               | TypeScript types for EditRecipe, ExportResult, etc.                  |
-| `src/components/*.tsx`           | Individual control panels (Trim, Rotate, Speed, Quality, etc.)       |
-
-### Data Flow
-
-1. **File Upload** → User selects video → Creates `File` object, probes duration
-2. **Recipe Building** → User adjusts settings → `EditRecipe` object updated
-3. **Export** → Click Export → Hook loads FFmpeg WASM → Builds filtergraph → Executes ffmpeg → Downloads blob
-
----
-
-## Design Choices
-
-### Why Client-Side Processing?
-
-- **Privacy**: Videos never uploaded to servers
-- **Speed**: No round-trip latency; processing starts immediately
-- **Cost**: Zero server infrastructure
-- **Reliability**: Works offline; deploy anywhere
-
-### Why Single-Threaded FFmpeg?
-
-FFmpeg.wasm offers two builds:
-
-- **`@ffmpeg/core`** (single-threaded): Works everywhere; no SharedArrayBuffer needed
-- **`@ffmpeg/core-mt`** (multi-threaded): Faster but requires COOP/COEP headers
-
-**Decision**: Used single-threaded to maximize deployment flexibility. Static hosts like GitHub Pages and Cloudflare Pages don't allow custom headers. Trade-off: acceptable for typical videos (<30 min); large files may be slow.
-
-### Why Lottie Animations?
-
-**Why not CSS or SVG?**
-
-- Lottie provides smooth, authorship-quality animations out of the box
-- Smaller bundle than pre-made SVG frames
-- Professional feel with minimal code
-
-**Why imperatively with lottie-web?**
-
-- `lottie-react` has SSR concerns with Next.js App Router
-- Direct `lottie-web` API via dynamic import avoids all SSR issues
-- Cleaner client-side setup
-
-FFmpeg filters are chained in a specific order for correctness:
-
-1. **Trim** → Remove unwanted frames first (reduces processing load)
-2. **Rotate** → Rotate the trimmed video
-3. **Scale/Crop** → Resize for target format
-4. **Speed** → Adjust playback speed (applied after scaling for accuracy)
-
-For audio:
-
-- **Trim** → Sync with video trim
-- **Speed** → Match video speed adjustment
-- `atempo` filter only accepts 0.5–2.0x; chain it for extreme speeds (e.g., 0.25x = `atempo=0.5,atempo=0.5`)
-
-### Why No Backend?
-
-I wanted to keep this project simple and deployable anywhere.
-
----
-
-## Architecture Highlights
-
-### 1. Lazy FFmpeg Loading
-
-FFmpeg.wasm (~30 MB) is downloaded only on first export, not on app load. Uses `toBlobURL` to bypass CORS:
-
-```typescript
-coreURL: await toBlobURL(`${CORE_BASE_URL}/ffmpeg-core.js`, "text/javascript");
-```
-
-### 2. Video Duration Detection
-
-Probes video duration on file select using `HTMLVideoElement.loadedmetadata` event. Enables real-time trim validation.
-
-### 3. Reactive State Management
-
-Single `EditRecipe` object holds all user settings. Updates via `useCallback` hooks prevent unnecessary re-renders.
-
----
-
-## Tech Stack
-
-| Layer                | Tech                                                 |
-| -------------------- | ---------------------------------------------------- |
-| **Framework**        | Next.js 15 (App Router, static export)               |
-| **Language**         | TypeScript 5                                         |
-| **Styling**          | Tailwind CSS v3, custom theme                        |
-| **Icons**            | Lucide React                                         |
-| **Animations**       | Lottie Web                                           |
-| **Video Processing** | FFmpeg.wasm (single-threaded core)                   |
-| **Fonts**            | Bebas Neue (display), Syne (heading), DM Sans (body) |
 
 ---
 
@@ -167,12 +45,13 @@ Single `EditRecipe` object holds all user settings. Updates via `useCallback` ho
 
 ### Prerequisites
 
-- Node.js 18+
-- Bun or npm/yarn
+- [Bun](https://bun.sh) (recommended) or Node.js 18+
 
 ### Installation
 
 ```bash
+git clone https://github.com/magic-peach/reframe.git
+cd reframe
 bun install
 ```
 
@@ -182,7 +61,7 @@ bun install
 bun run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000)
+Open [http://localhost:3000](http://localhost:3000) — changes reflect instantly with Next.js Fast Refresh.
 
 ### Production Build
 
@@ -190,30 +69,137 @@ Open [http://localhost:3000](http://localhost:3000)
 bun run build
 ```
 
-Outputs a static site to `out/` — deploy to any static host.
+Outputs a static site to `out/` — deploy to Vercel, Netlify, GitHub Pages, or any static host.
+
+---
+
+## Deploying
+
+Reframe is a fully static app. Deploy the `out/` folder anywhere:
+
+| Platform | Command |
+|----------|---------|
+| **Vercel** | Connect your fork at [vercel.com/new](https://vercel.com/new) |
+| **Netlify** | Connect your fork at [netlify.com](https://app.netlify.com/start) |
+| **GitHub Pages** | Push `out/` to `gh-pages` branch |
+| **Cloudflare Pages** | Connect your fork in the Cloudflare dashboard |
 
 ---
 
 ## How It Works
 
-1. **Load Video**: User selects a file → App detects duration
-2. **Build Recipe**: User adjusts presets, framing, trim, speed, etc. → Creates `EditRecipe` object
-3. **Export**:
-   - Click "EXPORT" → Hook sets status to `loading-engine`
-   - FFmpeg WASM lazily downloads from CDN (~30 MB, cached by browser)
-   - Hook sets status to `exporting`
-   - Video written to WASM virtual filesystem
-   - Filtergraph built and executed
-   - Output read back as Blob
-   - Blob URL created → Download link provided
-4. **Download**: User downloads MP4
-   All processing happens locally. No data leaves your device.
+1. **Load Video** → User selects a file → App detects resolution and duration
+2. **Build Recipe** → User adjusts presets, framing, trim, speed → Creates `EditRecipe`
+3. **Export** → Click Export → FFmpeg WASM loads from CDN (~30 MB, cached after first use) → Filtergraph runs locally → File downloads
+4. **Done** → Your edited video is ready. Nothing was uploaded anywhere.
+
+### Architecture
+
+```mermaid
+graph TD
+    A["UI Layer · Next.js Components"] --> B["VideoEditor · FileUpload · PresetSelector · FramingControl · TrimControl"]
+    A --> C["AudioSpeedControl · RotateControl · ExportSettings"]
+    B --> D["useVideoEditor Hook · State Management"]
+    C --> D
+    D --> E["ffmpeg.ts · Lazy-loads WASM, builds filter chains"]
+    E --> F["FFmpeg.wasm · Single-threaded core via CDN · ~30MB"]
+    F --> G["Video Pipeline: trim → rotate → scale/crop → speed"]
+    G --> I["Output: MP4 or WebM · Blob URL → Download"]
+```
+
+### Key Files
+
+| File | Purpose |
+|------|---------|
+| `src/components/VideoEditor.tsx` | Root component; layout, state orchestration |
+| `src/hooks/useVideoEditor.ts` | State management (file, recipe, export status) |
+| `src/lib/ffmpeg.ts` | FFmpeg wrapper; lazy-loads WASM, builds filter chains |
+| `src/lib/presets.ts` | 11 preset definitions (9:16, 16:9, 4:5, etc.) |
+| `src/lib/types.ts` | TypeScript types for EditRecipe, ExportResult, etc. |
+| `src/components/*.tsx` | Individual control panels (Trim, Rotate, Speed, Quality) |
+
+---
+
+## Tech Stack
+
+| Layer | Tech |
+|-------|------|
+| **Framework** | Next.js 15 (App Router, static export) |
+| **Language** | TypeScript 5 |
+| **Styling** | Tailwind CSS v3 |
+| **Icons** | Lucide React |
+| **Animations** | Lottie Web |
+| **Video Processing** | FFmpeg.wasm (single-threaded) |
+| **Fonts** | Bebas Neue · Syne · DM Sans |
+
+---
+
+## Supported Browsers
+
+| Browser | Support | Notes |
+|---------|---------|-------|
+| Chrome 90+ | ✅ Full | Recommended |
+| Firefox 89+ | ✅ Full | |
+| Safari 15+ | ✅ Full | |
+| Edge 90+ | ✅ Full | |
+| Mobile Chrome | ✅ Full | |
+| Mobile Safari | ⚠️ Partial | Large files may be slow |
 
 ---
 
 ## Contributing
 
-Contributions welcome! Please open an issue or PR.
+### ⭐ Star this repo — it helps more people find Reframe!
+
+**Reframe is an open-source project and we welcome contributions of all kinds** — from fixing a typo in the README to implementing a brand new feature. Every contribution matters.
+
+---
+
+### 🌸 GirlScript Summer of Code 2026
+
+Reframe is an **official project in GirlScript Summer of Code (GSSoC) 2026**! We have **300+ open issues** across all difficulty levels — from beginner-friendly tasks to advanced features.
+
+> **If you're a GSSoC participant**, add the `gssoc'26` label to any issue you want to work on, and mention your GitHub username in a comment to claim it.
+
+#### Find issues to work on:
+
+| Level | Label | Description |
+|-------|-------|-------------|
+| 🟢 **Beginner** | [`good first issue`](https://github.com/magic-peach/reframe/issues?q=is%3Aopen+label%3A%22good+first+issue%22) | Small, well-defined tasks — perfect if this is your first open source contribution |
+| 🟡 **Intermediate** | [`enhancement`](https://github.com/magic-peach/reframe/issues?q=is%3Aopen+label%3Aenhancement) | Feature improvements and UX enhancements |
+| 🔴 **Advanced** | [`feature`](https://github.com/magic-peach/reframe/issues?q=is%3Aopen+label%3Afeature) | New features requiring deeper understanding of FFmpeg/WASM |
+| 🔵 **Any Level** | [`documentation`](https://github.com/magic-peach/reframe/issues?q=is%3Aopen+label%3Adocumentation) | Docs, guides, and README improvements |
+| ♿ **Any Level** | [`accessibility`](https://github.com/magic-peach/reframe/issues?q=is%3Aopen+label%3Aaccessibility) | Making Reframe usable for everyone |
+
+**[→ Browse all GSSoC'26 issues](https://github.com/magic-peach/reframe/issues?q=is%3Aopen+label%3A%22gssoc%2726%22)**
+
+---
+
+### How to Contribute
+
+1. **Find an issue** — Browse [open issues](https://github.com/magic-peach/reframe/issues) or pick one from the table above
+2. **Comment on the issue** — Say you'd like to work on it so we don't duplicate effort
+3. **Fork the repo** — Click the Fork button at the top right
+4. **Create a branch** — `git checkout -b feat/your-feature-name`
+5. **Make your changes** — Code, test, and commit
+6. **Open a Pull Request** — Reference the issue number in your PR description
+7. **Get reviewed** — We'll review and merge your contribution!
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for the full guide including development setup, code style, and PR checklist.
+
+---
+
+## Contributors
+
+Thank you to everyone who has contributed to Reframe! 🎉
+
+[![Contributors](https://contrib.rocks/image?repo=magic-peach/reframe)](https://github.com/magic-peach/reframe/graphs/contributors)
+
+---
+
+## Privacy
+
+Reframe processes all videos **100% client-side**. Your video files are never uploaded to any server. You can even use Reframe offline (after first load). The source code is fully open for inspection.
 
 ---
 
@@ -222,3 +208,11 @@ Contributions welcome! Please open an issue or PR.
 MIT License — See [LICENSE](LICENSE) for details.
 
 ---
+
+<div align="center">
+
+**If Reframe saved you time, please [⭐ star the repo](https://github.com/magic-peach/reframe) — it helps others discover it!**
+
+Made with ❤️ for everyone who just wants to edit a video without the hassle.
+
+</div>
