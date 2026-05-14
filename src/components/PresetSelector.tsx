@@ -34,11 +34,12 @@ export default function PresetSelector({ recipe, onChange }: Props) {
           const active = recipe.preset === preset.id;
           return (
             <button
+              type="button"
               key={preset.id}
               onClick={() => onChange({ preset: preset.id })}
               title={`${preset.label} — ${preset.platform}`}
               className={`
-                flex items-center gap-2.5 p-2.5 rounded-lg border text-left transition-all duration-150
+                flex items-center gap-2.5 p-2.5 rounded-lg border text-left transition-all duration-150 cursor-pointer
                 hover:scale-[1.02] active:scale-[0.98]
                 ${active
                   ? "border-film-500 bg-film-50"
@@ -60,9 +61,10 @@ export default function PresetSelector({ recipe, onChange }: Props) {
         })}
 
         <button
+          type="button"
           onClick={() => onChange({ preset: "custom" })}
           className={`
-            flex items-center gap-2.5 p-2.5 rounded-lg border text-left transition-all duration-150
+            flex items-center gap-2.5 p-2.5 rounded-lg border text-left transition-all duration-150 cursor-pointer
             hover:scale-[1.02] active:scale-[0.98]
             ${recipe.preset === "custom"
               ? "border-film-500 bg-film-50"

@@ -17,10 +17,11 @@ export default function RotateControl({ recipe, onChange }: Props) {
         const active = recipe.rotate === deg;
         return (
           <button
+            type="button"
             key={deg}
             onClick={() => onChange({ rotate: deg })}
             className={`
-              flex-1 flex flex-col items-center gap-1.5 py-3 rounded-lg border text-xs transition-all duration-150
+              flex-1 flex flex-col items-center gap-1.5 py-3 rounded-lg border text-xs transition-all duration-150 cursor-pointer
               hover:scale-[1.03] active:scale-[0.97]
               ${active
                 ? "border-film-500 bg-film-50 text-film-700 font-heading font-semibold"
@@ -29,6 +30,7 @@ export default function RotateControl({ recipe, onChange }: Props) {
             `}
           >
             <RotateCw size={15} style={{ transform: `rotate(${deg}deg)` }} className="transition-transform" />
+            <span className="sr-only">Rotate video to {deg} degrees</span>
             {deg}
           </button>
         );

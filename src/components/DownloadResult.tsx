@@ -23,6 +23,9 @@ export default function DownloadResult({ result, onReset }: Props) {
         <div>
           <p className="font-heading font-bold text-base text-[var(--text)]">Export complete</p>
           <p className="text-xs text-[var(--muted)] mt-0.5">Ready to download</p>
+          <p className="text-sm text-[var(--text)]">
+            Resolution: {result.width} × {result.height}
+          </p>
         </div>
       </div>
 
@@ -47,6 +50,7 @@ export default function DownloadResult({ result, onReset }: Props) {
           Download {result.format.toUpperCase()}
         </a>
         <button
+          type="button"
           onClick={onReset}
           className="flex items-center gap-2 px-4 py-3 border border-[var(--border)] text-[var(--muted)] text-sm rounded-lg hover:bg-[var(--bg)] transition-colors"
         >
