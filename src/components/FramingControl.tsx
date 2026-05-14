@@ -18,6 +18,7 @@ export default function FramingControl({ recipe, onChange }: Props) {
           <button
             type="button"
             key={mode}
+            title={mode === "fit" ? "Fit the image within the frame" : "Fill the frame by cropping"}
             onClick={() => onChange({ framing: mode })}
             className={`
               flex-1 flex flex-col items-center gap-2 py-4 rounded-lg border transition-all duration-150
