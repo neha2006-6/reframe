@@ -4,6 +4,8 @@ import { useState, useCallback, useRef, useEffect } from "react";
 import { EditRecipe, ExportResult, ExportStatus, DEFAULT_RECIPE } from "@/lib/types";
 import { loadFFmpeg, exportVideo } from "@/lib/ffmpeg";
 
+const DEFAULT_TITLE = "Reframe — Resize, trim, and export videos in your browser";
+
 function getVideoDuration(file: File): Promise<number> {
   return new Promise((resolve) => {
     const video = document.createElement("video");
@@ -88,6 +90,35 @@ export function useVideoEditor() {
     }
   }, [file, recipe]);
 
+  useEffect(() => {
+    if (file) {
+      document.title = `Editing: ${file.name} | Reframe`;
+    } else {
+      document.title = DEFAULT_TITLE;
+    }
+    return () => {
+      document.title = DEFAULT_TITLE;
+    };
+  }, [file]);
+
+  useEffect(() => {
+    const handleKeydown = (e: KeyboardEvent) => {
+      if (
+        (e.ctrlKey || e.metaKey) &&
+        e.key === "Enter" &&
+        file &&
+        status === "idle"
+      ) {
+        handleExport();
+      }
+    };
+
+    document.addEventListener("keydown", handleKeydown);
+
+    return () => {
+      document.removeEventListener("keydown", handleKeydown);
+    };
+  }, [file, status, handleExport]);
   const reset = useCallback(() => {
     // Free the exported video buffer from memory before clearing state.
     if (resultBlobRef.current) {
