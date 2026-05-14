@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import { EditRecipe, ExportResult, ExportStatus, DEFAULT_RECIPE } from "@/lib/types";
 import { loadFFmpeg, exportVideo } from "@/lib/ffmpeg";
 
@@ -30,6 +30,19 @@ export function useVideoEditor() {
   const [result, setResult] = useState<ExportResult | null>(null);
   const [error, setError] = useState<string | null>(null);
 
+  // Track the active export blob URL so we can revoke it when it is replaced
+  // or when the hook unmounts — prevents the full video buffer from being held
+  // in memory indefinitely after each export.
+  const resultBlobRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (resultBlobRef.current) {
+        URL.revokeObjectURL(resultBlobRef.current);
+      }
+    };
+  }, []);
+
   const updateRecipe = useCallback((patch: Partial<EditRecipe>) => {
     setRecipe((prev) => ({ ...prev, ...patch }));
   }, []);
@@ -58,6 +71,14 @@ export function useVideoEditor() {
       setStatus("exporting");
 
       const exportResult = await exportVideo(ffmpeg, file, recipe, setProgress);
+
+      // Revoke the previous blob URL before storing the new one so the old
+      // video buffer can be garbage-collected.
+      if (resultBlobRef.current) {
+        URL.revokeObjectURL(resultBlobRef.current);
+      }
+      resultBlobRef.current = exportResult.blobUrl;
+
       setResult(exportResult);
       setStatus("done");
     } catch (err) {
@@ -68,6 +89,11 @@ export function useVideoEditor() {
   }, [file, recipe]);
 
   const reset = useCallback(() => {
+    // Free the exported video buffer from memory before clearing state.
+    if (resultBlobRef.current) {
+      URL.revokeObjectURL(resultBlobRef.current);
+      resultBlobRef.current = null;
+    }
     setFile(null);
     setDuration(0);
     setRecipe(DEFAULT_RECIPE);
