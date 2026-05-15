@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Film, FolderOpen } from "lucide-react";
 import LottiePlayer from "./LottiePlayer";
 import uploadAnim from "@/lib/lottie/upload.json";
@@ -83,7 +83,7 @@ export default function FileUpload({ onFileSelect, currentFile }: Props) {
           onClick={() => inputRef.current?.click()}
           className="text-xs font-heading font-semibold text-film-600 hover:text-film-700 uppercase tracking-wide shrink-0 transition-colors cursor-pointer"
         >
-          Change
+          Change <span className="text-[var(--muted)]">(Ctrl+O / Cmd+O)</span>
         </button>
         <input
           ref={inputRef}
@@ -124,13 +124,19 @@ export default function FileUpload({ onFileSelect, currentFile }: Props) {
         <p className="text-sm text-[var(--muted)] mt-1">
           or click to browse
         </p>
+        <p className="text-xs text-[var(--muted)] mt-2 font-heading">
+          Ctrl+O / Cmd+O
+        </p>
       </div>
 
       <div className="flex items-center gap-2 px-4 py-2 bg-[var(--surface)] border border-[var(--border)] rounded-lg text-sm font-heading font-medium text-[var(--muted)]">
-        <FolderOpen size={14} />
+      <FolderOpen size={14} />
         MP4 / MOV / AVI / WebM
       </div>
-
+      <p className="text-xs text-gray-500">
+        Supports: MP4, MOV, AVI, MKV, WebM, and most video formats
+      </p>
+      
       <input
         ref={inputRef}
         type="file"
