@@ -1,7 +1,7 @@
 "use client";
 
 import FocusTrap from "focus-trap-react";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useCallback } from "react";
 import { ExportStatus } from "@/lib/types";
 import LottiePlayer from "./LottiePlayer";
 import spinnerAnim from "@/lib/lottie/spinner.json";
@@ -18,13 +18,23 @@ export default function ExportOverlay({ status, progress, onCancel }: Props) {
 
   const previousFocusRef = useRef<HTMLElement | null>(null);
   const focusAnchorRef = useRef<HTMLDivElement | null>(null);
-
+const handleKeyDown = useCallback((e: KeyboardEvent) => {
+  if (e.key === "Escape") {
+    onCancel();
+  }
+}, [onCancel]);
   useEffect(() => {
-    if (visible) {
-      previousFocusRef.current =
-        document.activeElement as HTMLElement;
-    }
-  }, [visible]);
+  if (!visible) return;
+
+  window.addEventListener("keydown", handleKeyDown);
+
+  previousFocusRef.current =
+    document.activeElement as HTMLElement;
+
+  return () => {
+    window.removeEventListener("keydown", handleKeyDown);
+  };
+}, [visible, handleKeyDown]);
 
   useEffect(() => {
     if (!visible && previousFocusRef.current) {
